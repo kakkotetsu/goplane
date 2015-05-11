@@ -71,17 +71,35 @@ func (d *Dataplane) modRib(p *api.Path) error {
 	}
 
 	via := net.ParseIP(p.Nexthop)
-	routes, _ := netlink.RouteGet(via)
+	net, _ := netlink.ParseIPNet(p.Nlri.Prefix)
+
+	routes, _ := netlink.RouteGet(net.IP)
+	log.Debugf("routes to %s: %s", net.IP, routes)
+	for _, route := range routes {
+		r := &netlink.Route{
+			LinkIndex: route.LinkIndex,
+			Dst:       route.Dst,
+		}
+		err := netlink.RouteDel(r)
+		log.Debugf("delete route: %s, err: %s", r, err)
+		if err != nil {
+			return err
+		}
+	}
+
+	routes, _ = netlink.RouteGet(via)
 	if len(routes) == 0 {
 		return fmt.Errorf("no route to nexthop: %s", p.Nexthop)
 	}
-	net, _ := netlink.ParseIPNet(p.Nlri.Prefix)
+
 	route := &netlink.Route{
 		LinkIndex: routes[0].LinkIndex,
 		Dst:       net,
 		Src:       d.config.Bgp.Global.RouterId,
 		Gw:        via,
 	}
+	log.Debugf("add route: %s", route)
+
 	return netlink.RouteAdd(route)
 }
 
