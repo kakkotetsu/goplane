@@ -80,6 +80,7 @@ func (d *Dataplane) modRib(p *api.Path) error {
 		LinkIndex: routes[0].LinkIndex,
 		Dst:       net,
 		Src:       d.config.Bgp.Global.RouterId,
+		Gw:        via,
 	}
 	return netlink.RouteAdd(route)
 }
