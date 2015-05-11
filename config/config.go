@@ -18,11 +18,12 @@ package config
 import bgp "github.com/osrg/gobgp/config"
 
 type VirtualNetwork struct {
-	VNI              uint32
-	VxlanPort        uint16
-	VtepInterface    string
-	Color            uint32
-	MemberInterfaces []string
+	VNI                 uint32
+	VxlanPort           uint16
+	VtepInterface       string
+	Color               uint32
+	MemberInterfaces    []string
+	ConfigureInterfaces []string
 }
 
 type Dataplane struct {

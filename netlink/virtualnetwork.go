@@ -166,7 +166,7 @@ func (n *VirtualNetwork) Serve() error {
 		return fmt.Errorf("failed to set master %s dev %s", brName, n.config.VtepInterface)
 	}
 
-	for _, member := range n.config.MemberInterfaces {
+	for _, member := range n.config.ConfigureInterfaces {
 		m, err := netlink.LinkByName(member)
 		if err != nil {
 			log.Errorf("can't find %s", member)
