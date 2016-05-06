@@ -53,7 +53,7 @@ func main() {
 		UseSyslog     string `short:"s" long:"syslog" description:"use syslogd"`
 		Facility      string `long:"syslog-facility" description:"specify syslog facility"`
 		DisableStdlog bool   `long:"disable-stdlog" description:"disable standard logging"`
-		GrpcPort      int    `long:"grpc-port" description:"grpc port" default:"50051"`
+		GrpcHosts     string `long:"api-hosts" description:"specify the hosts that gobgpd listens on" default:":50051"`  // see. https://github.com/osrg/gobgp/issues/796
 	}
 	_, err := flags.Parse(&opts)
 	if err != nil {
@@ -153,11 +153,11 @@ func main() {
 	go bgpServer.Serve()
 
 	// start grpc Server
-	grpcServer := bgpserver.NewGrpcServer(opts.GrpcPort, bgpServer.GrpcReqCh)
+	grpcServer := bgpserver.NewGrpcServer(opts.GrpcHosts, bgpServer.GrpcReqCh)
 	go grpcServer.Serve()
 
 	var dataplane Dataplaner
-	var bgpConfig *bgpconf.Bgp
+	var bgpConfig *bgpconf.BgpConfigSet
 	var policyConfig *bgpconf.RoutingPolicy
 	var dataplaneConfig *config.Dataplane
 
@@ -168,7 +168,7 @@ func main() {
 				PolicyDefinitions: newConfig.PolicyDefinitions,
 				DefinedSets:       newConfig.DefinedSets,
 			}
-			bgp := bgpconf.Bgp{
+			bgp := bgpconf.BgpConfigSet{
 				Global:      newConfig.Global,
 				Neighbors:   newConfig.Neighbors,
 				RpkiServers: newConfig.RpkiServers,
@@ -188,8 +188,11 @@ func main() {
 				bgpServer.SetRpkiConfig(newConfig.RpkiServers)
 			}
 
-			c, added, deleted, updated := bgpconf.UpdateConfig(bgpConfig, &bgp)
-			bgpConfig = c
+			added, deleted, updated, updatePolicy := bgpconf.UpdateConfig(bgpConfig, &bgp)
+			if updatePolicy {
+				//
+			}
+			bgpConfig = &bgp
 
 			for _, p := range added {
 				log.Infof("Peer %v is added", p.Config.NeighborAddress)

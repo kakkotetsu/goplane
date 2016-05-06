@@ -36,7 +36,7 @@ func ReadConfigfileServe(path, format string, configCh chan Config, reloadCh cha
 		if err != nil {
 			log.Fatal("can't read config file ", path, ", ", err)
 		}
-		b := bgp.Bgp{
+		b := bgp.BgpConfigSet{
 			Global:      c.Global,
 			Neighbors:   c.Neighbors,
 			RpkiServers: c.RpkiServers,
